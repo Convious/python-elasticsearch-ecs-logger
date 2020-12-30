@@ -243,7 +243,7 @@ class ElasticECSHandler(logging.Handler):
         self.raise_on_indexing_exceptions = raise_on_indexing_exceptions
 
         self._client = None
-        self._buffer = []
+        self._buffer = collections.deque([])
         self._buffer_lock = Lock()
         self._timer = None
         self._index_name_func = ElasticECSHandler._INDEX_FREQUENCY_FUNCION_DICT[self.index_name_frequency]
@@ -335,10 +335,11 @@ class ElasticECSHandler(logging.Handler):
             try:
                 with self._buffer_lock:
                     logs_buffer = self._buffer
-                    self._buffer = []
+                    self._buffer = collections.deque([])
                 actions = (
                     {
                         '_index': self._index_name_func.__func__(self.es_index_name),
+                        '_type': '_doc',
                         '_source': log_record
                     }
                     for log_record in logs_buffer
